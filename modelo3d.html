@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo 3D · Iglesia de Catavi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/estilos.css">
+<link rel="stylesheet" href="css/modelo3d.css">
+
+<!-- Three.js (CDN). Import map para usar módulos ESM modernos. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<header class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">
+      <span class="brand-mark">✦</span>
+      <span><strong>Iglesia de Catavi</strong><small>Museo Virtual</small></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menú">☰</button>
+    <nav class="nav-links" id="navLinks">
+      <a href="index.html">Inicio</a>
+      <a href="historia.html">Historia</a>
+      <a href="galeria.html">Galería</a>
+      <a href="modelo3d.html" class="active">Modelo 3D</a>
+    </nav>
+  </div>
+</header>
+
+<section class="model-layout">
+  <div class="model-stage">
+    <div id="viewer" class="viewer"></div>
+    <div class="viewer-loader" id="loader">
+      <div class="spinner"></div>
+      <p>Cargando modelo 3D…</p>
+    </div>
+    <div class="viewer-hint">Arrastra para rotar · Rueda para zoom · Click derecho para desplazar</div>
+  </div>
+
+  <aside class="model-panel">
+    <span class="chip">Museo virtual</span>
+    <h1>Iglesia de Catavi <span class="gold">en 3D</span></h1>
+    <p class="lead">Modelo digital reconstruido a partir de levantamientos arquitectónicos y fotogrametría. Explora el templo desde cualquier ángulo en tu navegador.</p>
+
+    <div class="info-card">
+      <h3>Descripción del modelo</h3>
+      <ul>
+        <li><strong>Formato:</strong> glTF 2.0 (.glb)</li>
+        <li><strong>Polígonos:</strong> ~120k</li>
+        <li><strong>Texturas:</strong> PBR (color, normal, rugosidad)</li>
+        <li><strong>Escala:</strong> 1 unidad = 1 metro</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Controles</h3>
+      <ul class="controls-list">
+        <li><kbd>Click izq.</kbd> Rotar cámara</li>
+        <li><kbd>Click der.</kbd> Desplazar</li>
+        <li><kbd>Rueda</kbd> Acercar / alejar</li>
+      </ul>
+      <div class="ctrl-buttons">
+        <button id="btnReset" class="btn btn-outline btn-sm">Reiniciar vista</button>
+        <button id="btnAuto" class="btn btn-outline btn-sm">Rotación auto</button>
+        <button id="btnWire" class="btn btn-outline btn-sm">Wireframe</button>
+      </div>
+    </div>
+
+    <a href="galeria.html" class="btn btn-primary btn-block">← Regresar a la galería</a>
+  </aside>
+</section>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><h4 class="gold">Iglesia de Catavi</h4><p>Proyecto académico de visita virtual y documentación patrimonial.</p></div>
+    <div><h4>Navegación</h4><ul><li><a href="index.html">Inicio</a></li><li><a href="historia.html">Historia</a></li><li><a href="galeria.html">Galería</a></li><li><a href="modelo3d.html">Modelo 3D</a></li></ul></div>
+    <div><h4>Proyecto académico</h4><ul><li>Universidad Mayor</li><li>Ingeniería Informática</li><li>Computación Gráfica</li><li>Gestión 2026</li></ul></div>
+  </div>
+  <div class="footer-bottom container">© 2026 Iglesia de Catavi · Todos los derechos reservados</div>
+</footer>
+
+<script src="js/menu.js"></script>
+<script type="module" src="js/iglesia.js"></script>
+</body>
+</html>

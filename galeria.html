@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galería · Iglesia de Catavi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/estilos.css">
+<link rel="stylesheet" href="css/galeria.css">
+</head>
+<body>
+<header class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">
+      <span class="brand-mark">✦</span>
+      <span><strong>Iglesia de Catavi</strong><small>Patrimonio Histórico</small></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menú">☰</button>
+    <nav class="nav-links" id="navLinks">
+      <a href="index.html">Inicio</a>
+      <a href="historia.html">Historia</a>
+      <a href="galeria.html" class="active">Galería</a>
+      <a href="modelo3d.html">Modelo 3D</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero short">
+  <div class="container hero-content text-center">
+    <span class="chip">Galería visual</span>
+    <h1 class="hero-title">Imágenes del <span class="gold">templo</span></h1>
+    <p class="hero-sub">Exterior, interior y detalles capturados con luz natural.</p>
+  </div>
+</section>
+
+<section class="container section">
+  <div class="gallery-tabs">
+    <button class="tab active" data-cat="all">Todo</button>
+    <button class="tab" data-cat="exterior">Exterior</button>
+    <button class="tab" data-cat="interior">Interior</button>
+    <button class="tab" data-cat="detalles">Detalles</button>
+  </div>
+
+  <div class="section-head"><h2 id="cat-exterior">Exterior</h2></div>
+  <div class="gallery">
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/frontal.jpg" alt="Vista frontal" data-title="Vista frontal" data-desc="Fachada principal de piedra labrada con campanario.">
+      <figcaption><h4>Vista frontal</h4><p>Fachada principal de piedra.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/frontal.jpg" alt="Frontal izquierda" data-title="Vista frontal izquierda" data-desc="Perspectiva en ángulo desde la izquierda del atrio.">
+      <figcaption><h4>Frontal izquierda</h4><p>Ángulo desde el atrio.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/frontal.jpg" alt="Frontal derecha" data-title="Vista frontal derecha" data-desc="Perspectiva en ángulo desde la derecha del atrio.">
+      <figcaption><h4>Frontal derecha</h4><p>Vista en escorzo.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/lateral.jpg" alt="Lateral izquierda" data-title="Lateral izquierda" data-desc="Muro lateral de piedra con contrafuertes.">
+      <figcaption><h4>Lateral izquierda</h4><p>Muros y contrafuertes.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/lateral.jpg" alt="Lateral derecha" data-title="Lateral derecha" data-desc="Fachada lateral derecha con ventanas altas.">
+      <figcaption><h4>Lateral derecha</h4><p>Ventanas altas.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/aerea.jpg" alt="Vista trasera" data-title="Vista trasera" data-desc="Parte posterior del templo y su integración con el pueblo.">
+      <figcaption><h4>Vista trasera</h4><p>Integración con el pueblo.</p></figcaption>
+    </figure>
+  </div>
+
+  <div class="section-head"><h2 id="cat-interior">Interior</h2></div>
+  <div class="gallery">
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/nave.jpg" alt="Interior frontal" data-title="Interior frontal" data-desc="Vista desde la entrada hacia el altar mayor.">
+      <figcaption><h4>Interior frontal</h4><p>Vista hacia el altar.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/altar.jpg" alt="Altar principal" data-title="Altar principal" data-desc="Retablo mayor cubierto en pan de oro.">
+      <figcaption><h4>Altar principal</h4><p>Retablo en pan de oro.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/nave.jpg" alt="Lado izquierdo" data-title="Interior lado izquierdo" data-desc="Nave lateral izquierda con pinturas y bancas.">
+      <figcaption><h4>Lado izquierdo</h4><p>Nave lateral.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/nave.jpg" alt="Lado derecho" data-title="Interior lado derecho" data-desc="Nave lateral derecha con candelabros e íconos.">
+      <figcaption><h4>Lado derecho</h4><p>Candelabros e íconos.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/nave.jpg" alt="Corredor central" data-title="Corredor central" data-desc="Pasillo central con alfombra roja hacia el presbiterio.">
+      <figcaption><h4>Corredor central</h4><p>Pasillo procesional.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/altar.jpg" alt="Techo" data-title="Techo abovedado" data-desc="Bóveda de cañón con decoraciones florales.">
+      <figcaption><h4>Techo</h4><p>Bóveda de cañón.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/vitral.jpg" alt="Vitrales" data-title="Vitrales" data-desc="Vitrales con iconografía religiosa y luz tamizada.">
+      <figcaption><h4>Vitrales</h4><p>Luz tamizada de colores.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/nave.jpg" alt="Coro" data-title="Coro" data-desc="Coro alto con balaustradas de madera tallada.">
+      <figcaption><h4>Coro</h4><p>Balaustradas de madera.</p></figcaption>
+    </figure>
+  </div>
+
+  <div class="section-head"><h2 id="cat-detalles">Detalles</h2></div>
+  <div class="gallery">
+    <figure class="g-item" data-cat="detalles">
+      <img src="assets/img/exterior/frontal.jpg" alt="Cruz principal" data-title="Cruz principal" data-desc="Cruz de piedra que corona la fachada.">
+      <figcaption><h4>Cruz principal</h4><p>Corona la fachada.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="detalles">
+      <img src="assets/img/exterior/frontal.jpg" alt="Campanario" data-title="Campanario" data-desc="Torre con campanas fundidas con estaño local.">
+      <figcaption><h4>Campanario</h4><p>Campanas centenarias.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="detalles">
+      <img src="assets/img/detalles/puerta.jpg" alt="Puerta principal" data-title="Puerta principal" data-desc="Portón de madera tallada con herrajes de hierro forjado.">
+      <figcaption><h4>Puerta principal</h4><p>Madera y herrajes.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="detalles">
+      <img src="assets/img/interior/vitral.jpg" alt="Ventanas" data-title="Ventanas" data-desc="Ventanas ojivales con vitrales de iconografía sagrada.">
+      <figcaption><h4>Ventanas</h4><p>Vitrales ojivales.</p></figcaption>
+    </figure>
+  </div>
+
+  <div class="cta-3d">
+    <h3>¿Quieres explorar el templo en tres dimensiones?</h3>
+    <a href="modelo3d.html" class="btn btn-gold btn-lg">Ver Modelo 3D Interactivo →</a>
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lb-close" id="lbClose" aria-label="Cerrar">✕</button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="Anterior">‹</button>
+  <button class="lb-nav lb-next" id="lbNext" aria-label="Siguiente">›</button>
+  <figure class="lb-content">
+    <img id="lbImg" src="" alt="">
+    <figcaption><h3 id="lbTitle"></h3><p id="lbDesc"></p></figcaption>
+  </figure>
+</div>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><h4 class="gold">Iglesia de Catavi</h4><p>Proyecto académico de visita virtual y documentación patrimonial.</p></div>
+    <div><h4>Navegación</h4><ul><li><a href="index.html">Inicio</a></li><li><a href="historia.html">Historia</a></li><li><a href="galeria.html">Galería</a></li><li><a href="modelo3d.html">Modelo 3D</a></li></ul></div>
+    <div><h4>Proyecto académico</h4><ul><li>Universidad Mayor</li><li>Ingeniería Informática</li><li>Computación Gráfica</li><li>Gestión 2026</li></ul></div>
+  </div>
+  <div class="footer-bottom container">© 2026 Iglesia de Catavi · Todos los derechos reservados</div>
+</footer>
+
+<script src="js/menu.js"></script>
+<script src="js/galeria.js"></script>
+</body>
+</html>
