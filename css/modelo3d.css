@@ -2,8 +2,12 @@
    Visor 3D
    ========================================================= */
 .model-layout{
-  display:grid;grid-template-columns:1fr 380px;gap:1.5rem;
-  padding:1.5rem;min-height:calc(100vh - 74px);
+  display:grid;
+  grid-template-columns:1fr 380px;
+  gap:1.5rem;
+  padding:1.5rem;
+  padding-top:100px;
+  min-height:100vh;
   background:linear-gradient(180deg,#0f172a,#0b1220);
 }
 .model-stage{
