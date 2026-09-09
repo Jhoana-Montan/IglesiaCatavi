@@ -4,14 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Modelo 3D · Iglesia de Catavi</title>
+<meta name="description" content="Visita virtual 3D de la Iglesia de Catavi. Modelo interactivo del patrimonio histórico de Bolivia.">
+<meta name="keywords" content="iglesia catavi, modelo 3d, patrimonio, bolivia, visita virtual">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="css/menu.css">
 <link rel="stylesheet" href="css/estilos.css">
 <link rel="stylesheet" href="css/modelo3d.css">
 
-<!-- Three.js (CDN). Import map para usar módulos ESM modernos. -->
+<script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
 <script type="importmap">
 {
   "imports": {
@@ -22,11 +26,12 @@
 </script>
 </head>
 <body>
-<header class="navbar">
-  <div class="nav-inner">
+
+<header class="navbar" style="position: fixed; top: 0; width: 100%; z-index: 10; background: rgba(5,8,18,0.9); backdrop-filter: blur(20px);">
+  <div class="nav-inner container">
     <a href="index.html" class="brand">
       <span class="brand-mark">✦</span>
-      <span><strong>Iglesia de Catavi</strong><small>Vista Virtual</small></span>
+      <span><strong>Iglesia de Catavi</strong><small>PATRIMONIO HISTÓRICO</small></span>
     </a>
     <button class="nav-toggle" id="navToggle" aria-label="Menú">☰</button>
     <nav class="nav-links" id="navLinks">
@@ -38,57 +43,74 @@
   </div>
 </header>
 
-<section class="model-layout">
-  <div class="model-stage">
-    <div id="viewer" class="viewer"></div>
-    <div class="viewer-loader" id="loader">
-      <div class="spinner"></div>
-      <p>Cargando modelo 3D…</p>
-    </div>
-    <div class="viewer-hint">Arrastra para rotar · Rueda para zoom · Click derecho para desplazar</div>
+<div id="viewer"></div>
+
+<div class="modelo-ui">
+  <div class="modelo-info">
+    <h1>IGLESIA DE CATAVI <span class="gold">3D INTERACTIVO</span></h1>
+    <p>Click + Arrastrar = Girar | Rueda = Zoom | Baja para ver el vidrial histórico</p>
+    <div class="loader" id="loader">Iniciando carga de 42.8MB...</div>
   </div>
+  <div class="controls-3d">
+    <button id="btnReset">Reset Vista</button>
+    <button id="btnAuto">Detener rotación</button>
+    <button id="btnWire">Wireframe</button>
+  </div>
+</div>
 
-  <aside class="model-panel">
-    <span class="chip">Museo virtual</span>
-    <h1>Iglesia de Catavi <span class="gold">en 3D</span></h1>
-    <p class="lead">Modelo digital reconstruido a partir de levantamientos arquitectónicos y fotogrametría. Explora la iglesia desde cualquier ángulo en tu navegador.</p>
-
-  
-    
-
-
-
-
-    
-
-    <div class="info-card">
-      <h3>Controles</h3>
-      <ul class="controls-list">
-        <li><kbd>Click izq.</kbd> Rotar cámara</li>
-        <li><kbd>Click der.</kbd> Desplazar</li>
-        <li><kbd>Rueda</kbd> Acercar / alejar</li>
-      </ul>
-      <div class="ctrl-buttons">
-        <button id="btnReset" class="btn btn-outline btn-sm">Reiniciar vista</button>
-        <button id="btnAuto" class="btn btn-outline btn-sm">Rotación auto</button>
-        <button id="btnWire" class="btn btn-outline btn-sm">Wireframe</button>
-      </div>
+<main class="scroll-content">
+  <section class="modelo-viewer" data-section="iglesia">
+    <div class="texto-lateral">
+      <h2>Vista General de la Iglesia</h2>
+      <p>Explora la arquitectura completa de la Iglesia de Catavi construida en 1905. Gira el modelo con el mouse para ver todos los detalles. Esta es la vista original con su entorno.</p>
     </div>
-
-    <a href="galeria.html" class="btn btn-primary btn-block">← Regresar a la galería</a>
-  </aside>
-</section>
+  </section>
+  
+  <section class="modelo-viewer" data-section="vidrial">
+    <div class="texto-lateral">
+      <h2>El Vidrial Histórico</h2>
+      <p>Al bajar llegas al detalle del vidrial. Una pieza única traída de Europa. Se ilumina solo cuando llegas a esta sección para apreciar su belleza.</p>
+    </div>
+  </section>
+  
+  <section class="modelo-viewer final">
+    <div class="texto-lateral">
+      <h2>FIN DEL RECORRIDO VIRTUAL</h2>
+      <p>Gracias por visitar la Iglesia de Catavi en 3D. Esperamos que hayas disfrutado de esta experiencia patrimonial.</p>
+      <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="btn-gold">VOLVER AL INICIO</button>
+    </div>
+  </section>
+</main>
 
 <footer class="footer">
   <div class="container footer-grid">
-    <div><h4 class="gold">Iglesia de Catavi</h4><p>Proyecto académico de visita virtual y documentación patrimonial.</p></div>
-    <div><h4>Navegación</h4><ul><li><a href="index.html">Inicio</a></li><li><a href="historia.html">Historia</a></li><li><a href="galeria.html">Galería</a></li><li><a href="modelo3d.html">Modelo 3D</a></li></ul></div>
-    <div><h4>Proyecto académico</h4><ul><li>Universidad Mayor</li><li>Ingeniería Informática</li><li>Computación Gráfica</li><li>Gestión 2026</li></ul></div>
+    <div>
+      <h4 class="gold">Iglesia de Catavi</h4>
+      <p>Proyecto académico de visita virtual para la preservación del patrimonio cultural boliviano.</p>
+    </div>
+    <div>
+      <h4>Navegación</h4>
+      <ul>
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="historia.html">Historia</a></li>
+        <li><a href="galeria.html">Galería</a></li>
+        <li><a href="modelo3d.html">Modelo 3D</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contacto</h4>
+      <ul>
+        <li>Catavi, Potosí - Bolivia</li>
+        <li>Patrimonio Cultural 1905</li>
+      </ul>
+    </div>
   </div>
-  <div class="footer-bottom container">© 2026 Iglesia de Catavi · Todos los derechos reservados</div>
+  <div class="footer-bottom container">
+    © 2026 Iglesia de Catavi · Todos los derechos reservados
+  </div>
 </footer>
 
-<script src="js/menu.js"></script>
 <script type="module" src="js/iglesia.js"></script>
+<script src="js/menu.js"></script>
 </body>
 </html>

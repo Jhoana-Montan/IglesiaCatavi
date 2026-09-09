@@ -1,0 +1,57 @@
+/* VITRAL ADELANTE */
+#canvas-container {
+  position: fixed;
+  z-index: 1;
+  pointer-events: auto!important;
+}
+
+/* QUITAR VELO */
+.hero { background: transparent!important; }
+
+/* BURBUJAS */
+.info-container {
+  position: relative;
+  z-index: 2;
+  padding-top: 100vh; /* Empieza después del hero */
+}
+.info-burbuja {
+  background: rgba(20,20,30,0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 25px;
+  padding: 40px;
+  margin: 100px auto;
+  max-width: 700px;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.8s ease;
+  box-shadow: 0 0 30px rgba(255,215,0,0.1);
+}
+.info-burbuja.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.info-burbuja h3 {
+  color: #ffd700;
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+
+/* BOTON VOLVER */
+.volver-inicio {
+  text-align: center;
+  padding: 100px 0;
+}
+.volver-inicio a {
+  color: #ffd700;
+  font-size: 20px;
+  text-decoration: none;
+  border: 2px solid #ffd700;
+  padding: 15px 40px;
+  border-radius: 50px;
+  transition: 0.3s;
+}
+.volver-inicio a:hover {
+  background: #ffd700;
+  color: #000;
+}
