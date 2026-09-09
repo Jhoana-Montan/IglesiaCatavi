@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galería · Iglesia de Catavi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/estilos.css">
+<link rel="stylesheet" href="css/galeria.css">
+</head>
+<body>
+<header class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">
+      <span class="brand-mark">✦</span>
+      <span><strong>Iglesia de Catavi</strong><small>Patrimonio Histórico</small></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menú">☰</button>
+    <nav class="nav-links" id="navLinks">
+      <a href="index.html">Inicio</a>
+      <a href="historia.html">Historia</a>
+      <a href="galeria.html" class="active">Galería</a>
+      <a href="modelo3d.html">Modelo 3D</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero short">
+  <div class="container hero-content text-center">
+    <span class="chip">Galería visual</span>
+    <h1 class="hero-title">Imágenes del <span class="gold">templo</span></h1>
+    <p class="hero-sub">Exterior, interior y detalles capturados con luz natural.</p>
+  </div>
+</section>
+
+<section class="container section">
+  <div class="gallery-tabs">
+    <button class="tab active" data-cat="all">Todo</button>
+    <button class="tab" data-cat="exterior">Exterior</button>
+    <button class="tab" data-cat="interior">Interior</button>
+    <button class="tab" data-cat="detalles">Detalles</button>
+  </div>
+
+  <div class="section-head"><h2 id="cat-exterior">Exterior</h2></div>
+  <div class="gallery">
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/frontal.jpg" alt="Vista frontal" data-title="Vista frontal" data-desc="Fachada principal de piedra labrada con campanario central.">
+      <figcaption><h4>Vista frontal</h4><p>Fachada principal de piedra.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/parte%20izquierda%20serca.png" alt="Frontal izquierda cerca" data-title="Frontal izquierda" data-desc="Perspectiva cercana desde el lado izquierdo del atrio.">
+      <figcaption><h4>Frontal izquierda</h4><p>Ángulo cercano desde el atrio.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/parte%20derecha%20serca.png" alt="Frontal derecha cerca" data-title="Frontal derecha" data-desc="Perspectiva cercana desde el lado derecho del atrio.">
+      <figcaption><h4>Frontal derecha</h4><p>Vista cercana en escorzo.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/parte%20izquierda%20lejos.png" alt="Lateral izquierda lejos" data-title="Lateral izquierda" data-desc="Muro lateral izquierdo con contrafuertes visto a distancia.">
+      <figcaption><h4>Lateral izquierda</h4><p>Muros y contrafuertes.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/parte%20derecha%20lejos.png" alt="Lateral derecha lejos" data-title="Lateral derecha" data-desc="Fachada lateral derecha con ventanas altas.">
+      <figcaption><h4>Lateral derecha</h4><p>Ventanas altas.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/parte%20tracera.png" alt="Vista trasera" data-title="Vista trasera" data-desc="Parte posterior del templo y su integración con el entorno.">
+      <figcaption><h4>Vista trasera</h4><p>Integración con el pueblo.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/parte%20tracera%20lejos%20.png" alt="Vista trasera lejana" data-title="Trasera lejana" data-desc="Vista panorámica de la parte posterior del templo.">
+      <figcaption><h4>Trasera lejana</h4><p>Panorámica posterior.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="exterior">
+      <img src="assets/img/exterior/aerea.jpg" alt="Vista aérea" data-title="Vista aérea" data-desc="Toma aérea del conjunto arquitectónico y la plaza.">
+      <figcaption><h4>Vista aérea</h4><p>Conjunto completo.</p></figcaption>
+    </figure>
+  </div>
+
+  <div class="section-head"><h2 id="cat-interior">Interior</h2></div>
+  <div class="gallery">
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/nave.jpg" alt="Nave central" data-title="Nave central" data-desc="Vista desde la entrada hacia el altar mayor con la nave central.">
+      <figcaption><h4>Nave central</h4><p>Vista hacia el altar.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/altar.jpg" alt="Altar principal" data-title="Altar principal" data-desc="Retablo mayor cubierto en pan de oro con detalles barrocos.">
+      <figcaption><h4>Altar principal</h4><p>Retablo en pan de oro.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/Virgen%20del%20Buen%20Consejo%2026%20de%20abril.png" alt="Virgen del Buen Consejo 26 de abril" data-title="Virgen del Buen Consejo" data-desc="Imagen devocional de la Virgen del Buen Consejo de Catavi, patrona celebrada el 26 de abril.">
+      <figcaption><h4>Virgen del Buen Consejo</h4><p>Festividad 26 de abril.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/Virgen%20del%20Buen%20Consejo.jpg" alt="Virgen del Buen Consejo" data-title="Virgen del Buen Consejo" data-desc="Imagen de la Virgen del Buen Consejo, advocación mariana venerada en el templo.">
+      <figcaption><h4>Virgen del Buen Consejo</h4><p>Advocación mariana.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="interior">
+      <img src="assets/img/interior/vitral.jpg" alt="Vitrales" data-title="Vitrales" data-desc="Vitrales con iconografía religiosa que filtran la luz natural.">
+      <figcaption><h4>Vitrales</h4><p>Luz tamizada de colores.</p></figcaption>
+    </figure>
+  </div>
+
+  <div class="section-head"><h2 id="cat-detalles">Detalles</h2></div>
+  <div class="gallery">
+    <figure class="g-item" data-cat="detalles">
+      <img src="assets/img/portada/portada.jpg" alt="Portada principal" data-title="Portada principal" data-desc="Detalle de la portada de piedra con elementos ornamentales.">
+      <figcaption><h4>Portada</h4><p>Detalle de piedra labrada.</p></figcaption>
+    </figure>
+    <figure class="g-item" data-cat="detalles">
+      <img src="assets/img/exterior/lateral.jpg" alt="Muro lateral" data-title="Detalle de muro" data-desc="Textura y aparejo del muro de piedra con contrafuertes.">
+      <figcaption><h4>Muro lateral</h4><p>Aparejo de piedra.</p></figcaption>
+    </figure>
+  </div>
+
+  <div class="cta-3d">
+    <h3>¿Quieres explorar el templo en tres dimensiones?</h3>
+    <a href="modelo3d.html" class="btn btn-gold btn-lg">Ver Modelo 3D Interactivo →</a>
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lb-close" id="lbClose" aria-label="Cerrar">✕</button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="Anterior">‹</button>
+  <button class="lb-nav lb-next" id="lbNext" aria-label="Siguiente">›</button>
+  <figure class="lb-content">
+    <img id="lbImg" src="" alt="">
+    <figcaption><h3 id="lbTitle"></h3><p id="lbDesc"></p></figcaption>
+  </figure>
+</div>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><h4 class="gold">Iglesia de Catavi</h4><p>Proyecto académico de visita virtual y documentación patrimonial.</p></div>
+    <div><h4>Navegación</h4><ul><li><a href="index.html">Inicio</a></li><li><a href="historia.html">Historia</a></li><li><a href="galeria.html">Galería</a></li><li><a href="modelo3d.html">Modelo 3D</a></li></ul></div>
+    <div><h4>Proyecto académico</h4><ul><li>Universidad Mayor</li><li>Ingeniería Informática</li><li>Computación Gráfica</li><li>Gestión 2026</li></ul></div>
+  </div>
+  <div class="footer-bottom container">© 2026 Iglesia de Catavi · Todos los derechos reservados</div>
+</footer>
+
+<script src="js/menu.js"></script>
+<script src="js/galeria.js"></script>
+</body>
+</html>

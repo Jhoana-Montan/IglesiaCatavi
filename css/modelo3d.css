@@ -1,0 +1,70 @@
+/* =========================================================
+   Visor 3D
+   ========================================================= */
+.model-layout{
+  display:grid;
+  grid-template-columns:1fr 380px;
+  gap:1.5rem;
+  padding:1.5rem;
+  padding-top:100px;
+  min-height:100vh;
+  background:linear-gradient(180deg,#0f172a,#0b1220);
+}
+.model-stage{
+  position:relative;background:#0b1220;border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;overflow:hidden;min-height:60vh;
+}
+.viewer{position:absolute;inset:0}
+.viewer canvas{display:block;width:100%!important;height:100%!important}
+
+.viewer-loader{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1rem;
+  background:rgba(11,18,32,.85);color:#cbd5e1;z-index:5;
+  transition:opacity .4s ease;
+}
+.viewer-loader.hidden{opacity:0;pointer-events:none}
+.spinner{
+  width:48px;height:48px;border-radius:50%;
+  border:3px solid rgba(251,191,36,.2);border-top-color:#fbbf24;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.viewer-hint{
+  position:absolute;left:1rem;bottom:1rem;z-index:4;
+  font-size:.75rem;color:#cbd5e1;background:rgba(15,23,42,.7);
+  padding:.5rem .85rem;border-radius:8px;border:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(8px);
+}
+
+/* PANEL LATERAL */
+.model-panel{
+  background:#1e293b;border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:2rem;display:flex;flex-direction:column;gap:1.25rem;
+  overflow:auto;max-height:calc(100vh - 110px);
+}
+.model-panel h1{font-size:2rem;margin:0}
+.model-panel .lead{color:#cbd5e1;font-size:.95rem;margin:0}
+.info-card{
+  background:#0f172a;border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;padding:1.1rem 1.25rem;
+}
+.info-card h3{
+  font-family:"Inter",sans-serif;font-size:.8rem;letter-spacing:.2em;
+  text-transform:uppercase;color:#fbbf24;margin:0 0 .75rem;
+}
+.info-card ul{display:flex;flex-direction:column;gap:.4rem}
+.info-card li{font-size:.85rem;color:#cbd5e1}
+.info-card li strong{color:#fff}
+.controls-list kbd{
+  display:inline-block;font-family:inherit;font-size:.7rem;
+  background:#273449;border:1px solid rgba(255,255,255,.1);
+  border-bottom-width:2px;border-radius:5px;padding:.15rem .45rem;color:#fbbf24;margin-right:.5rem;
+}
+.ctrl-buttons{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.85rem}
+
+@media (max-width:980px){
+  .model-layout{grid-template-columns:1fr;padding:1rem}
+  .model-panel{max-height:none;order:2}
+  .model-stage{min-height:55vh;order:1}
+}
