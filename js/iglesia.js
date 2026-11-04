@@ -1,4 +1,3 @@
-
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
@@ -35,6 +34,46 @@ const walkHelp = document.querySelector("#walkHelp");
 if (!container) {
     throw new Error("No se encontró el elemento #viewer en modelo3d.html");
 }
+
+// ======================================================
+// CONFIGURACIÓN DEL CURA
+// Aquí ajustas la altura, el recorrido y la reverencia.
+// ======================================================
+
+const PRIEST = {
+    // ---- ALTURA ----
+    // Altura del cura = altura de la iglesia × este valor (antes era 0.28).
+    // Súbelo para hacerlo más alto, bájalo para hacerlo más bajo.
+    heightRatio: 0.20,///////////////////////////////////////////////////////////////////////////
+
+    // Si lo ves hundido o flotando sobre la plataforma, ajusta este valor
+    // (positivo = sube). El piso se detecta automáticamente.
+    groundOffset: 0.02,
+
+    // Altura del piso si no se logra detectar (el valor que usabas antes).
+    fallbackGroundY: 2.0,
+
+    // Cambia a false si el cura camina de espaldas o se inclina hacia atrás.
+    modelFacesBackward: false,
+
+    // ---- RECORRIDO POR EL FRENTE ----
+    // Fracciones del ancho (X) y de la profundidad (Z) de la iglesia.
+    // Pulsa la tecla K en la página para calibrarlo con 4 clics.
+    path: {
+        leftX: -0.15,  // extremo izquierdo del recorrido
+        bowX: 0.07,    // centro del frente, junto a la puerta (aquí hace la reverencia)
+        rightX: 0.29,  // extremo derecho del recorrido
+        frontZ: 0.40,  // línea por la que camina, delante de la fachada
+        doorZ: 0.27    // posición de la puerta (hacia donde mira al reverenciar)
+    },
+
+    // ---- MOVIMIENTO ----
+    speed: 0.07,       // ancho de la iglesia que recorre por segundo
+    turnSpeed: 6,      // rapidez al girar
+
+    // ---- REVERENCIA (grados y segundos) ----
+    bow: { degrees: 0, down: 0.9, hold: 1.2, up: 1.0 }
+};
 
 // ======================================================
 // ESCENA Y CÁMARA
@@ -219,10 +258,25 @@ let virgin = null;
 let churchBox = null;
 let churchSize = null;
 
+// Cura: "priest" es el modelo; "priestHip" es el pivote de la cadera
+// (para inclinarse en la reverencia) y "priestRig" es el grupo que se mueve.
 let mixer = null;
+let priestAction = null;
+let priestRig = null;
+let priestHip = null;
+let priestHeight = 1;
+let priestHipHeight = 0;
 let walkTime = 0;
-let walkStart = null;
-let walkEnd = null;
+
+const priestMotion = {
+    ready: false,
+    stops: [],
+    target: 1,
+    state: "walk",
+    timer: 0,
+    groundY: 0,
+    doorYaw: Math.PI
+};
 
 let selectedHotspot = null;
 let doorTrigger = null;
@@ -597,6 +651,40 @@ loader.load(
 // CARGAR CURA DELANTE DE LA IGLESIA
 // ======================================================
 
+// Altura real del piso (parte superior de la plataforma) en un punto x, z.
+// Reemplaza el ajuste manual "+ 2.0" que se usaba antes.
+function sampleGroundY(x, z) {
+    if (!church || !churchSize) return PRIEST.fallbackGroundY;
+
+    world.updateMatrixWorld(true);
+
+    const origin = world.localToWorld(
+        new THREE.Vector3(x, churchSize.y * 3, z)
+    );
+
+    raycaster.set(origin, new THREE.Vector3(0, -1, 0));
+
+    const maxGround = churchSize.y * 0.2;
+    let groundY = null;
+
+    raycaster.intersectObject(church, true).forEach(hit => {
+        if (!hit.face) return;
+
+        // Solo superficies que miran hacia arriba y están a baja altura.
+        const normal = hit.face.normal
+            .clone()
+            .transformDirection(hit.object.matrixWorld);
+
+        if (normal.y < 0.5 || hit.point.y > maxGround) return;
+
+        if (groundY === null || hit.point.y > groundY) {
+            groundY = hit.point.y;
+        }
+    });
+
+    return groundY === null ? PRIEST.fallbackGroundY : groundY;
+}
+
 function loadPriest() {
     loader.load(
         "assets/models/cura.glb",
@@ -610,49 +698,208 @@ function loadPriest() {
                 }
             });
 
+            // 1) Orientación: el grupo que se mueve mira siempre hacia +Z.
+            priest.rotation.y = PRIEST.modelFacesBackward ? Math.PI : 0;
+            priest.updateMatrixWorld(true);
+
+            // 2) Altura: proporcional a la altura de la iglesia.
             const originalBox = new THREE.Box3().setFromObject(priest);
             const originalSize = originalBox.getSize(new THREE.Vector3());
 
-            const desiredHeight = churchSize.y * 0.28;
+            const desiredHeight = churchSize.y * PRIEST.heightRatio;
             const scale = desiredHeight / Math.max(originalSize.y, 0.001);
 
-            priest.scale.setScalar(scale);
+            priest.scale.multiplyScalar(scale);
+            priest.updateMatrixWorld(true);
 
+            // 3) Pies exactamente en y = 0 y modelo centrado en X/Z.
             const scaledBox = new THREE.Box3().setFromObject(priest);
+            const center = scaledBox.getCenter(new THREE.Vector3());
 
-            // El cura queda delante de la puerta, sobre el suelo.
-            // No se coloca en el centro del interior del edificio.
-            priest.position.set(
-                0,
-                -scaledBox.min.y,
-                churchSize.z * 0.40
-            );
+            priest.position.set(-center.x, -scaledBox.min.y, -center.z);
+            priestHeight = scaledBox.getSize(new THREE.Vector3()).y;
 
-            priest.position.y += 2.0;
-            priest.rotation.y = Math.PI;
-            world.add(priest);
+            // 4) Pivote en la cadera para poder inclinarse en la reverencia.
+            priestHipHeight = priestHeight * 0.40;
 
-            walkStart = priest.position.clone();
+            priestHip = new THREE.Group();
+            priestHip.position.y = priestHipHeight;
+            priest.position.y -= priestHipHeight;
+            priestHip.add(priest);
 
-            // Recorrido corto hacia la entrada sin alejarse del frente.//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            walkEnd = walkStart.clone().add(
-                new THREE.Vector3(
-                    churchSize.x * 0.12,
-                    0,
-                    -churchSize.z * 0.10
-                )
-            );
+            priestRig = new THREE.Group();
+            priestRig.add(priestHip);
+            world.add(priestRig);
 
+            // Animación del propio modelo, si la trae.
             if (gltf.animations && gltf.animations.length > 0) {
                 mixer = new THREE.AnimationMixer(priest);
-                mixer.clipAction(gltf.animations[0]).play();
+                priestAction = mixer.clipAction(gltf.animations[0]);
+                priestAction.play();
             }
+
+            setupPriestPath();
         },
         undefined,
         error => {
             console.warn("No se pudo cargar cura.glb:", error);
         }
     );
+}
+
+// Calcula las paradas del recorrido a partir de PRIEST.path
+// y coloca al cura en el extremo izquierdo.
+function setupPriestPath() {
+    if (!priestRig || !churchSize) return;
+
+    const p = PRIEST.path;
+    const sx = churchSize.x;
+    const sz = churchSize.z;
+    const frontZ = p.frontZ * sz;
+
+    priestMotion.groundY =
+        sampleGroundY(p.bowX * sx, frontZ) + PRIEST.groundOffset;
+
+    // Mira hacia la puerta al reverenciar (la puerta está en -Z o +Z del recorrido).
+    priestMotion.doorYaw = Math.atan2(0, p.doorZ * sz - frontZ);
+
+    // Izquierda → centro (reverencia) → derecha → centro (reverencia) → ...
+    priestMotion.stops = [
+        { x: p.leftX * sx, z: frontZ, bow: false },
+        { x: p.bowX * sx, z: frontZ, bow: true },
+        { x: p.rightX * sx, z: frontZ, bow: false },
+        { x: p.bowX * sx, z: frontZ, bow: true }
+    ];
+
+    priestMotion.target = 1;
+    priestMotion.state = "walk";
+    priestMotion.timer = 0;
+
+    const start = priestMotion.stops[0];
+    const next = priestMotion.stops[1];
+
+    priestRig.position.set(start.x, priestMotion.groundY, start.z);
+    priestRig.rotation.y = Math.atan2(next.x - start.x, next.z - start.z);
+
+    priestHip.rotation.set(0, 0, 0);
+    priestHip.position.y = priestHipHeight;
+
+    priestMotion.ready = true;
+}
+
+function turnPriestTo(angle, dt) {
+    let diff = angle - priestRig.rotation.y;
+    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+
+    priestRig.rotation.y += diff * Math.min(PRIEST.turnSpeed * dt, 1);
+
+    return Math.abs(diff);
+}
+
+function setPriestWalking(walking) {
+    if (priestAction) priestAction.paused = !walking;
+
+    if (!walking && priestHip) {
+        priestHip.position.y = priestHipHeight;
+        priestHip.rotation.z = 0;
+    }
+}
+
+// Movimiento del cura: recorre el frente de la iglesia y, al pasar por el
+// centro junto a la puerta, se gira hacia ella y hace una reverencia.
+function updatePriest(dt) {
+    if (!priestRig || !priestMotion.ready) return;
+
+    const motion = priestMotion;
+    const bow = PRIEST.bow;
+    const maxBow = THREE.MathUtils.degToRad(bow.degrees);
+    const ease = k => k * k * (3 - 2 * k);
+
+    walkTime += dt;
+
+    if (mixer) mixer.update(dt);
+
+    switch (motion.state) {
+        case "walk": {
+            const stop = motion.stops[motion.target];
+            const dx = stop.x - priestRig.position.x;
+            const dz = stop.z - priestRig.position.z;
+            const distance = Math.hypot(dx, dz);
+            const step = churchSize.x * PRIEST.speed * dt;
+
+            // Primero gira en el sitio hacia donde va a caminar.
+            if (distance > 0.001 && turnPriestTo(Math.atan2(dx, dz), dt) > 0.35) {
+                setPriestWalking(false);
+                break;
+            }
+
+            if (distance <= step) {
+                priestRig.position.x = stop.x;
+                priestRig.position.z = stop.z;
+                setPriestWalking(false);
+
+                if (stop.bow) {
+                    motion.state = "turnToDoor";
+                } else {
+                    motion.target = (motion.target + 1) % motion.stops.length;
+                }
+            } else {
+                priestRig.position.x += (dx / distance) * step;
+                priestRig.position.z += (dz / distance) * step;
+                setPriestWalking(true);
+
+                // Balanceo al caminar si el modelo no trae animación.
+                if (!priestAction) {
+                    priestHip.position.y =
+                        priestHipHeight +
+                        Math.abs(Math.sin(walkTime * 3)) * priestHeight * 0.015;
+
+                    priestHip.rotation.z = Math.sin(walkTime * 1.5) * 0.03;
+                }
+            }
+
+            break;
+        }
+
+        case "turnToDoor":
+            if (turnPriestTo(motion.doorYaw, dt) < 0.05) {
+                motion.state = "bowDown";
+                motion.timer = 0;
+            }
+            break;
+
+        case "bowDown":
+            motion.timer += dt;
+            priestHip.rotation.x =
+                maxBow * ease(Math.min(motion.timer / bow.down, 1));
+
+            if (motion.timer >= bow.down) {
+                motion.state = "bowHold";
+                motion.timer = 0;
+            }
+            break;
+
+        case "bowHold":
+            motion.timer += dt;
+
+            if (motion.timer >= bow.hold) {
+                motion.state = "bowUp";
+                motion.timer = 0;
+            }
+            break;
+
+        case "bowUp":
+            motion.timer += dt;
+            priestHip.rotation.x =
+                maxBow * (1 - ease(Math.min(motion.timer / bow.up, 1)));
+
+            if (motion.timer >= bow.up) {
+                priestHip.rotation.x = 0;
+                motion.target = (motion.target + 1) % motion.stops.length;
+                motion.state = "walk";
+            }
+            break;
+    }
 }
 
 // ======================================================
@@ -944,10 +1191,142 @@ if (btnReset) {
 }
 
 // ======================================================
+// CALIBRAR EL RECORRIDO DEL CURA (tecla K)
+// Cuatro clics sobre la iglesia fijan por dónde camina y dónde reverencia.
+// ======================================================
+
+const calibration = { active: false, step: 0, points: [] };
+
+const calibrationSteps = [
+    "Cura 1/4: haz clic en un EXTREMO del frente de la iglesia",
+    "Cura 2/4: haz clic en el CENTRO, frente a la puerta (aquí hará la reverencia)",
+    "Cura 3/4: haz clic en el OTRO extremo del frente",
+    "Cura 4/4: haz clic en la PUERTA (hacia donde mirará)"
+];
+
+let pointerDownX = 0;
+let pointerDownY = 0;
+
+renderer.domElement.addEventListener("pointerdown", event => {
+    pointerDownX = event.clientX;
+    pointerDownY = event.clientY;
+});
+
+function startPriestCalibration() {
+    calibration.active = true;
+    calibration.step = 0;
+    calibration.points.length = 0;
+
+    hideInfo();
+
+    if (loaderText) {
+        loaderText.textContent = calibrationSteps[0];
+    }
+}
+
+function cancelPriestCalibration() {
+    calibration.active = false;
+
+    if (loaderText) {
+        loaderText.textContent = "Calibración del cura cancelada";
+    }
+}
+
+function handleCalibrationClick(event) {
+    // Si el ratón se arrastró para girar la cámara, no cuenta como clic.
+    if (Math.hypot(event.clientX - pointerDownX, event.clientY - pointerDownY) > 5) {
+        return;
+    }
+
+    const rect = renderer.domElement.getBoundingClientRect();
+
+    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(pointer, camera);
+
+    const hit = raycaster.intersectObject(church, true)[0];
+    if (!hit) return;
+
+    // Se guarda en las coordenadas del grupo "world" (donde vive el cura).
+    calibration.points.push(world.worldToLocal(hit.point.clone()));
+    calibration.step++;
+
+    if (calibration.step < calibrationSteps.length) {
+        if (loaderText) {
+            loaderText.textContent = calibrationSteps[calibration.step];
+        }
+
+        return;
+    }
+
+    finishPriestCalibration();
+}
+
+function finishPriestCalibration() {
+    calibration.active = false;
+
+    const [a, c, b, d] = calibration.points;
+    const sx = churchSize.x;
+    const sz = churchSize.z;
+    const round = value => Math.round(value * 1000) / 1000;
+
+    PRIEST.path = {
+        leftX: round(Math.min(a.x, b.x) / sx),
+        bowX: round(c.x / sx),
+        rightX: round(Math.max(a.x, b.x) / sx),
+        frontZ: round(c.z / sz),
+        doorZ: round(d.z / sz)
+    };
+
+    setupPriestPath();
+
+    const p = PRIEST.path;
+    const text =
+        `path: { leftX: ${p.leftX}, bowX: ${p.bowX}, rightX: ${p.rightX}, ` +
+        `frontZ: ${p.frontZ}, doorZ: ${p.doorZ} },`;
+
+    console.log("Pega esto dentro de PRIEST en iglesia.js:\n" + text);
+
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).catch(() => {});
+    }
+
+    if (loaderText) {
+        loaderText.textContent =
+            "Recorrido del cura listo. Se copió al portapapeles: pégalo en PRIEST.path";
+    }
+}
+
+document.addEventListener("keydown", event => {
+    if (event.code === "Escape" && calibration.active) {
+        cancelPriestCalibration();
+        return;
+    }
+
+    if (event.code !== "KeyK") return;
+
+    if (calibration.active) {
+        cancelPriestCalibration();
+        return;
+    }
+
+    if (!priestRig || !church || showingVirgin || walkMode) return;
+
+    startPriestCalibration();
+});
+
+// ======================================================
 // CLIC EN LA PUERTA: ABRIR LA VISTA DE LA VIRGEN
 // ======================================================
 
 renderer.domElement.addEventListener("click", event => {
+    // Mientras se calibra el recorrido del cura, los clics marcan puntos.
+    if (calibration.active) {
+        handleCalibrationClick(event);
+        return;
+    }
+
     if (!church || !doorTrigger || showingVirgin || walkMode) return;
 
     const rect = renderer.domElement.getBoundingClientRect();
@@ -992,16 +1371,14 @@ if (btnLight) {
     btnLight.addEventListener("click", () => {
         brighter = !brighter;
 
-        
-renderer.toneMappingExposure = brighter ? 0.95 : 0.75;
+        renderer.toneMappingExposure = brighter ? 0.95 : 0.75;
 
-keyLight.intensity = brighter ? 2.2 : 1.4;
-fillLight.intensity = brighter ? 0.8 : 0.5;
-frontLight.intensity = brighter ? 10 : 6;
-rimLight.intensity = brighter ? 25 : 15;
+        keyLight.intensity = brighter ? 2.2 : 1.4;
+        fillLight.intensity = brighter ? 0.8 : 0.5;
+        frontLight.intensity = brighter ? 10 : 6;
+        rimLight.intensity = brighter ? 25 : 15;
 
-bloom.strength = brighter ? 0.08 : 0.04;
-
+        bloom.strength = brighter ? 0.08 : 0.04;
 
         scene.background.set(
             brighter ? "#a8b7ca" : "#080d18"
@@ -1245,34 +1622,9 @@ function animate() {
         world.rotation.y += dt * 0.12;
     }
 
-    // Movimiento del cura delante de la puerta.
-    if (priest && walkStart && walkEnd && !showingVirgin) {
-        walkTime += dt;
-
-        const cycle = (walkTime % 12) / 12;
-
-        const t = cycle < 0.78
-            ? cycle / 0.78
-            : 1 - (cycle - 0.78) / 0.22;
-
-        priest.position.lerpVectors(
-            walkStart,
-            walkEnd,
-            THREE.MathUtils.smoothstep(t, 0, 1)
-        );
-
-        priest.position.y +=
-            Math.abs(Math.sin(walkTime * 2.2)) *
-            churchSize.y * 0.008;
-
-        priest.rotation.y =
-            Math.PI + Math.sin(walkTime * 0.8) * 0.12;
-
-        if (mixer) {
-            mixer.update(dt);
-        } else {
-            priest.rotation.z = Math.sin(walkTime * 5) * 0.018;
-        }
+    // Cura: camina por todo el frente y hace una reverencia frente a la puerta.
+    if (priestRig && !showingVirgin) {
+        updatePriest(dt);
     }
 
     // Movimiento con teclado en modo caminar.
