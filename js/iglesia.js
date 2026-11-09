@@ -8,6 +8,9 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { createInterior } from "./interior.js";
+import { createAmbiente } from "./ambiente.js";
+
 
 // ======================================================
 // ELEMENTOS HTML
@@ -22,7 +25,6 @@ const closeInfo = document.querySelector("#closeInfo");
 
 const btnReset = document.querySelector("#btnReset");
 const btnAuto = document.querySelector("#btnAuto");
-const btnLight = document.querySelector("#btnLight");
 const btnVirgen = document.querySelector("#btnVirgen");
 const btnWalk = document.querySelector("#btnWalk");
 const btnTour = document.querySelector("#btnTour");
@@ -30,27 +32,27 @@ const btnPhoto = document.querySelector("#btnPhoto");
 const btnFull = document.querySelector("#btnFull");
 const btnMenu = document.querySelector("#btnMenu");
 const walkHelp = document.querySelector("#walkHelp");
+const btnInicio = document.querySelector("#btnInicio");
 
 if (!container) {
     throw new Error("No se encontró el elemento #viewer en modelo3d.html");
 }
 
 // ======================================================
-// CONFIGURACIÓN DEL CURA
+// CONFIGURACIÓN DEL CURA (EXTERIOR)
 // Aquí ajustas la altura, el recorrido y la reverencia.
 // ======================================================
 
 const PRIEST = {
     // ---- ALTURA ----
-    // Altura del cura = altura de la iglesia × este valor (antes era 0.28).
-    // Súbelo para hacerlo más alto, bájalo para hacerlo más bajo.
-    heightRatio: 0.20,///////////////////////////////////////////////////////////////////////////
+    // Altura del cura = altura de la iglesia × este valor.
+    heightRatio: 0.20,
 
     // Si lo ves hundido o flotando sobre la plataforma, ajusta este valor
     // (positivo = sube). El piso se detecta automáticamente.
     groundOffset: 0.02,
 
-    // Altura del piso si no se logra detectar (el valor que usabas antes).
+    // Altura del piso si no se logra detectar.
     fallbackGroundY: 2.0,
 
     // Cambia a false si el cura camina de espaldas o se inclina hacia atrás.
@@ -80,8 +82,8 @@ const PRIEST = {
 // ======================================================
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color("#080d18");
-scene.fog = new THREE.FogExp2("#080d18", 0.008);
+scene.background = new THREE.Color("#a9c9df");
+scene.fog = null;
 
 const camera = new THREE.PerspectiveCamera(
     42,
@@ -134,9 +136,8 @@ const environment = pmrem.fromScene(new RoomEnvironment(), 0.04);
 scene.environment = environment.texture;
 pmrem.dispose();
 
-scene.add(
-    new THREE.HemisphereLight(0xdce9ff, 0x554638, 2.0)
-);
+const hemiLight = new THREE.HemisphereLight(0xdce9ff, 0x554638, 2.0);
+scene.add(hemiLight);
 
 const keyLight = new THREE.DirectionalLight(0xffe6b5, 3.4);
 keyLight.position.set(-8, 14, 10);
@@ -170,7 +171,6 @@ frontLight.position.set(0, 5, 12);
 scene.add(frontLight);
 
 // Luz dedicada a la Virgen.
-// Aporta detalle sin exagerar el brillo del modelo.
 const virginLight = new THREE.SpotLight(
     0xffe5ad,
     24,
@@ -186,22 +186,38 @@ virginLight.visible = false;
 scene.add(virginLight, virginLight.target);
 
 // ======================================================
-// SUELO
+// SUELO (solo recibe sombras; el paisaje lo pone la foto de Catavi)
 // ======================================================
 
 const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(500, 500),
-    new THREE.MeshStandardMaterial({
-        color: 0x111a28,
-        roughness: 0.88,
-        metalness: 0.05
-    })
+    new THREE.ShadowMaterial({ opacity: 0.35 })
 );
 
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.03;
 ground.receiveShadow = true;
 scene.add(ground);
+
+// ======================================================
+// AMBIENTE: FOTO DE CATAVI + CICLO DÍA / ATARDECER / NOCHE
+// ======================================================
+
+const ambiente = createAmbiente({
+    scene,
+    camera,
+    renderer,
+    bloom,
+    ground,
+    lights: {
+        hemi: hemiLight,
+        key: keyLight,
+        fill: fillLight,
+        rim: rimLight,
+        front: frontLight
+    },
+    photoUrl: "assets/img/detalles/CATAVI FOTO.jpg"
+});
 
 // ======================================================
 // CONTROLES
@@ -286,6 +302,52 @@ let virginHeight = 1;
 const hotspotObjects = [];
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
+
+// ======================================================
+// INTERIOR DE LA IGLESIA (js/interior.js)
+// Se carga solo cuando se hace clic en la puerta.
+// ======================================================
+
+const interior = createInterior({
+    scene,
+    camera,
+    renderer,
+    controls,
+    loader,
+    setExteriorVisible(visible) {
+        world.visible = visible;
+        ground.visible = visible;
+
+        [keyLight, fillLight, rimLight, frontLight].forEach(light => {
+            light.visible = visible;
+        });
+
+        hotspotObjects.forEach(object => {
+            object.visible = visible;
+        });
+
+        ambiente.setExteriorVisible(visible);
+    }
+});
+
+function enterInterior() {
+    autoRotate = false;
+    tourActive = false;
+
+    if (btnAuto) {
+        btnAuto.classList.remove("active");
+        const span = btnAuto.querySelector("span");
+        if (span) span.textContent = "Giro automático";
+    }
+
+    if (btnTour) {
+        const span = btnTour.querySelector("span");
+        if (span) span.textContent = "Recorrido guiado";
+    }
+
+    hideInfo();
+    interior.enter();
+}
 
 // ======================================================
 // INFORMACIÓN HISTÓRICA
@@ -427,10 +489,11 @@ function centerAndFit(model) {
 
     const viewDistance = dist * 1.18;
 
+    // Vista inicial: de frente a la iglesia, a la altura del horizonte.
     camera.position.set(
-        viewDistance * 0.92,
-        viewDistance * 0.34,
-        viewDistance * 1.12
+        0,
+        churchSize.y * 0.50,
+        churchSize.y * 3.9
     );
 
     camera.near = Math.max(0.05, radius / 100);
@@ -440,10 +503,13 @@ function centerAndFit(model) {
     controls.minDistance = radius * 0.12;
     controls.maxDistance = radius * 8.0;
 
-    controls.target.set(0, churchSize.y * 0.36, 0);
+    controls.target.set(0, churchSize.y * 0.43, 0);
     controls.update();
 
     ground.position.y = 0;
+
+    // Lámparas y focos nocturnos según el tamaño de la iglesia.
+    ambiente.setChurchSize(churchSize);
 
     // Guardar la vista original para regresar desde la Virgen.
     saveChurchCamera();
@@ -572,7 +638,6 @@ function createDoorTrigger() {
     }
 
     // Zona invisible situada delante de la fachada.
-    // El ancho permite hacer clic en diferentes partes de la puerta.
     const width = Math.max(churchSize.x * 0.30, 0.8);
     const height = Math.max(churchSize.y * 0.40, 1.0);
 
@@ -594,8 +659,7 @@ function createDoorTrigger() {
         churchSize.z * 0.515
     );
 
-    doorTrigger.name = "zonaPuertaVirgen";
-    doorTrigger.userData.opensVirgin = true;
+    doorTrigger.name = "zonaPuertaInterior";
 
     world.add(doorTrigger);
 }
@@ -626,6 +690,8 @@ loader.load(
             }
         });
 
+        ambiente.trackMaterials(church, 1.25);
+
         world.add(church);
         centerAndFit(church);
 
@@ -652,7 +718,6 @@ loader.load(
 // ======================================================
 
 // Altura real del piso (parte superior de la plataforma) en un punto x, z.
-// Reemplaza el ajuste manual "+ 2.0" que se usaba antes.
 function sampleGroundY(x, z) {
     if (!church || !churchSize) return PRIEST.fallbackGroundY;
 
@@ -697,6 +762,8 @@ function loadPriest() {
                     object.receiveShadow = true;
                 }
             });
+
+            ambiente.trackMaterials(priest, 1.0);
 
             // 1) Orientación: el grupo que se mueve mira siempre hacia +Z.
             priest.rotation.y = PRIEST.modelFacesBackward ? Math.PI : 0;
@@ -760,7 +827,7 @@ function setupPriestPath() {
     priestMotion.groundY =
         sampleGroundY(p.bowX * sx, frontZ) + PRIEST.groundOffset;
 
-    // Mira hacia la puerta al reverenciar (la puerta está en -Z o +Z del recorrido).
+    // Mira hacia la puerta al reverenciar.
     priestMotion.doorYaw = Math.atan2(0, p.doorZ * sz - frontZ);
 
     // Izquierda → centro (reverencia) → derecha → centro (reverencia) → ...
@@ -923,13 +990,12 @@ function loadVirgin() {
 
                     materials.forEach(material => {
                         material.envMapIntensity = 1.35;
-
-                        // Conserva las texturas y evita modificar
-                        // los colores originales de la imagen.
                         material.needsUpdate = true;
                     });
                 }
             });
+
+            ambiente.trackMaterials(virgin, 1.35);
 
             const originalBox = new THREE.Box3().setFromObject(virgin);
             const originalSize = originalBox.getSize(new THREE.Vector3());
@@ -949,7 +1015,6 @@ function loadVirgin() {
             virginHeight = centeredBox.getSize(new THREE.Vector3()).y;
 
             // Posición de espera fuera de la vista de la iglesia.
-            // La Virgen se centra en pantalla cuando se selecciona.
             virgin.position.set(
                 churchSize.x * 0.72,
                 virginHeight * 0.5,
@@ -981,6 +1046,8 @@ function loadVirgin() {
 // ======================================================
 
 function showVirginView() {
+    if (interior.isActive()) return;
+
     if (!virgin) {
         if (loaderText) {
             loaderText.textContent =
@@ -993,7 +1060,6 @@ function showVirginView() {
     if (showingVirgin) return;
 
     // Guardar la cámara en el momento de entrar a la vista de la Virgen.
-    // Así se conserva el zoom que tenía el usuario en la iglesia.
     saveChurchCamera();
 
     showingVirgin = true;
@@ -1017,7 +1083,6 @@ function showVirginView() {
     if (church) church.visible = false;
     if (priest) priest.visible = false;
 
-    // Ocultar los puntos de la iglesia y la zona clicable de la puerta.
     hotspotObjects.forEach(object => {
         object.visible = false;
     });
@@ -1030,14 +1095,12 @@ function showVirginView() {
     virgin.visible = true;
     virgin.rotation.y = 0;
 
-    // El centro geométrico del modelo se utiliza como objetivo.
     const box = new THREE.Box3().setFromObject(virgin);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
 
     virginCenter.copy(center);
 
-    // La cámara mira a la Virgen de frente, sin cortar sus detalles.
     const distance = Math.max(size.y * 2.5, 1.5);
 
     controls.target.copy(center);
@@ -1058,7 +1121,8 @@ function showVirginView() {
     controls.maxPolarAngle = Math.PI * 0.95;
     controls.update();
 
-    // Luz especial y efecto suave para destacar la imagen religiosa.
+    // Luz especial para destacar la imagen religiosa.
+    // (El brillo y el bloom ahora los controla el ciclo día/noche.)
     virginLight.visible = true;
     virginLight.position.set(
         center.x,
@@ -1068,13 +1132,6 @@ function showVirginView() {
 
     virginLight.target.position.copy(center);
 
-    bloom.strength = 0.30;
-    bloom.radius = 0.45;
-    bloom.threshold = 0.82;
-
-    renderer.toneMappingExposure = 1.18;
-
-    // Mostrar únicamente el nombre completo, sin descripción adicional.
     showInfo({
         id: "virgen",
         title: "Virgen del Buen Consejo",
@@ -1096,6 +1153,12 @@ if (btnVirgen) {
 // ======================================================
 
 function resetView() {
+    // Si estamos dentro de la iglesia, salir al exterior.
+    if (interior.isActive()) {
+        interior.exit();
+        return;
+    }
+
     if (showingVirgin) {
         showingVirgin = false;
 
@@ -1120,13 +1183,6 @@ function resetView() {
         }
 
         virginLight.visible = false;
-
-        // Restaurar los efectos de la vista de la iglesia.
-        bloom.strength = 0.34;
-        bloom.radius = 0.55;
-        bloom.threshold = 0.78;
-
-        renderer.toneMappingExposure = brighter ? 1.65 : 1.32;
 
         controls.maxPolarAngle = Math.PI * 0.49;
 
@@ -1167,12 +1223,12 @@ function resetView() {
         1.18;
 
     camera.position.set(
-        distance * 0.92,
-        distance * 0.34,
-        distance * 1.12
+        0,
+        churchSize.y * 0.50,
+        churchSize.y * 3.9
     );
 
-    controls.target.set(0, churchSize.y * 0.36, 0);
+    controls.target.set(0, churchSize.y * 0.43, 0);
     controls.minDistance = radius * 0.12;
     controls.maxDistance = radius * 8.0;
     controls.maxPolarAngle = Math.PI * 0.49;
@@ -1188,6 +1244,17 @@ function resetView() {
 
 if (btnReset) {
     btnReset.addEventListener("click", resetView);
+}
+
+// ======================================================
+// VOLVER A LA PÁGINA PRINCIPAL
+// ======================================================
+
+if (btnInicio) {
+    btnInicio.addEventListener("click", () => {
+        exitWalkMode(); // libera el ratón si estaba en modo caminar
+        window.location.href = "index.html";
+    });
 }
 
 // ======================================================
@@ -1311,13 +1378,13 @@ document.addEventListener("keydown", event => {
         return;
     }
 
-    if (!priestRig || !church || showingVirgin || walkMode) return;
+    if (!priestRig || !church || showingVirgin || walkMode || interior.isActive()) return;
 
     startPriestCalibration();
 });
 
 // ======================================================
-// CLIC EN LA PUERTA: ABRIR LA VISTA DE LA VIRGEN
+// CLIC EN LA PUERTA: ENTRAR AL INTERIOR DE LA IGLESIA
 // ======================================================
 
 renderer.domElement.addEventListener("click", event => {
@@ -1327,7 +1394,7 @@ renderer.domElement.addEventListener("click", event => {
         return;
     }
 
-    if (!church || !doorTrigger || showingVirgin || walkMode) return;
+    if (!church || !doorTrigger || showingVirgin || walkMode || interior.isActive()) return;
 
     const rect = renderer.domElement.getBoundingClientRect();
 
@@ -1339,7 +1406,7 @@ renderer.domElement.addEventListener("click", event => {
     const hits = raycaster.intersectObject(doorTrigger, false);
 
     if (hits.length > 0) {
-        showVirginView();
+        enterInterior();
     }
 });
 
@@ -1364,42 +1431,9 @@ if (btnAuto) {
 }
 
 // ======================================================
-// ILUMINACIÓN DÍA / NOCHE
+// ILUMINACIÓN DÍA / ATARDECER / NOCHE
+// Ahora la controla el sol de la barra de controles (js/ambiente.js).
 // ======================================================
-
-if (btnLight) {
-    btnLight.addEventListener("click", () => {
-        brighter = !brighter;
-
-        renderer.toneMappingExposure = brighter ? 0.95 : 0.75;
-
-        keyLight.intensity = brighter ? 2.2 : 1.4;
-        fillLight.intensity = brighter ? 0.8 : 0.5;
-        frontLight.intensity = brighter ? 10 : 6;
-        rimLight.intensity = brighter ? 25 : 15;
-
-        bloom.strength = brighter ? 0.08 : 0.04;
-
-        scene.background.set(
-            brighter ? "#a8b7ca" : "#080d18"
-        );
-
-        scene.fog.color.set(
-            brighter ? "#a8b7ca" : "#080d18"
-        );
-
-        ground.material.color.set(
-            brighter ? 0x343a42 : 0x111a28
-        );
-
-        const span = btnLight.querySelector("span");
-        if (span) {
-            span.textContent = brighter ? "Modo noche" : "Día / Noche";
-        }
-
-        btnLight.classList.toggle("active", brighter);
-    });
-}
 
 // ======================================================
 // MODO CAMINAR
@@ -1425,7 +1459,7 @@ function exitWalkMode() {
 
 if (btnWalk) {
     btnWalk.addEventListener("click", () => {
-        if (!church || showingVirgin) return;
+        if (!church || showingVirgin || interior.isActive()) return;
 
         if (walkMode) {
             exitWalkMode();
@@ -1482,7 +1516,7 @@ let tourStart = 0;
 
 if (btnTour) {
     btnTour.addEventListener("click", () => {
-        if (!church || showingVirgin || tourStops.length === 0) return;
+        if (!church || showingVirgin || interior.isActive() || tourStops.length === 0) return;
 
         tourActive = !tourActive;
         tourStart = performance.now();
@@ -1512,7 +1546,9 @@ if (btnPhoto) {
             const link = document.createElement("a");
             link.download = showingVirgin
                 ? "virgen-del-buen-consejo.png"
-                : "iglesia-catavi-recorrido.png";
+                : interior.isActive()
+                    ? "iglesia-catavi-interior.png"
+                    : "iglesia-catavi-recorrido.png";
 
             link.href = renderer.domElement.toDataURL("image/png");
             link.click();
@@ -1553,10 +1589,10 @@ if (btnMenu) {
     btnMenu.addEventListener("click", () => {
         controlsVisible = !controlsVisible;
 
-        document.querySelectorAll(".controls-3d button").forEach(button => {
-            if (button.id !== "btnMenu") {
-                button.style.display = controlsVisible ? "flex" : "none";
-            }
+        document.querySelectorAll(".controls-3d > *").forEach(element => {
+            if (element.id === "btnMenu") return;
+            if (element.dataset.hiddenByInterior) return;
+            element.style.display = controlsVisible ? "" : "none";
         });
 
         const span = btnMenu.querySelector("span");
@@ -1573,7 +1609,6 @@ if (btnMenu) {
 // ======================================================
 
 renderer.domElement.addEventListener("pointerdown", event => {
-    // No cerrar la información al iniciar un clic en la zona de la puerta.
     if (event.target === renderer.domElement) {
         hideInfo();
     }
@@ -1615,14 +1650,16 @@ function animate() {
 
     const dt = Math.min(clock.getDelta(), 0.05);
 
-    controls.update();
+    // Si los controles están desactivados (caminar o controlar al cura),
+    // no se actualizan para no pisar la cámara.
+    if (controls.enabled) controls.update();
 
     // Girar automáticamente la iglesia solo en su vista.
     if (autoRotate && church && !showingVirgin) {
         world.rotation.y += dt * 0.12;
     }
 
-    // Cura: camina por todo el frente y hace una reverencia frente a la puerta.
+    // Cura exterior: camina por todo el frente y hace una reverencia.
     if (priestRig && !showingVirgin) {
         updatePriest(dt);
     }
@@ -1705,6 +1742,12 @@ function animate() {
     if (virgin && virgin.visible && showingVirgin) {
         virgin.rotation.y += dt * 0.08;
     }
+
+    // Interior: cura autónomo, control del cura y cámaras.
+    interior.update(dt);
+
+    // Foto de Catavi y ciclo Día / Atardecer / Noche.
+    ambiente.update(dt);
 
     composer.render();
     labelRenderer.render(scene, camera);

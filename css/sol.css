@@ -1,0 +1,95 @@
+/* ========================================
+   CONTROL DEL SOL (Día / Atardecer / Noche)
+======================================== */
+.sun-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  background: rgba(20, 30, 48, 0.94);
+}
+
+.sun-label {
+  text-align: center;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffe27a;
+}
+
+.sun-rail {
+  padding: 0 16px;
+}
+
+.sun-track {
+  position: relative;
+  height: 12px;
+  margin: 16px 0 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: linear-gradient(90deg, #7ec0ff 0%, #ffb35a 50%, #10183a 100%);
+  cursor: pointer;
+  touch-action: none;
+  outline: none;
+}
+
+/* Zona de agarre más grande que la barra visible */
+.sun-track::before {
+  content: "";
+  position: absolute;
+  inset: -16px -10px;
+}
+
+.sun-track:focus-visible {
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.sun-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+  background: var(--orb, #ffd84a);
+  box-shadow: 0 0 14px var(--orb, #ffd84a), 0 0 0 2px rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+}
+
+.sun-stops {
+  position: relative;
+  height: 34px;
+}
+
+.controls-3d .sun-stops button {
+  position: absolute;
+  top: 0;
+  width: 34px;
+  min-height: 30px;
+  height: 30px;
+  margin-left: -17px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.sun-stops button:nth-child(1) { left: 0; }
+.sun-stops button:nth-child(2) { left: 50%; }
+.sun-stops button:nth-child(3) { left: 100%; }
+
+.controls-3d .sun-stops button.active {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.25);
+}
+
+.controls-3d .sun-stops button.active:hover {
+  background: #ffd700;
+}

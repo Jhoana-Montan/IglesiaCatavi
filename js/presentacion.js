@@ -1,113 +1,144 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
+// ---------- Interacción de la página (no depende de Three.js) ----------
+const bar = document.getElementById("progress");
 const container = document.getElementById("canvas-container");
-if (container) initPresentacion();
 
-function initPresentacion(){
-  let scrollY = 0;
-  let targetScroll = 0;
-  let startY = 0;
+// Aparición al hacer scroll
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+}, { threshold: 0.15 });
+document.querySelectorAll(".rv").forEach(el => io.observe(el));
 
+// Contadores animados
+document.querySelectorAll("[data-count]").forEach(el => {
+  const end = +el.dataset.count, suffix = el.dataset.suffix || "", plain = "plain" in el.dataset;
+  const t0 = performance.now() + 900, dur = 1800;
+  const step = now => {
+    const k = Math.min(Math.max((now - t0) / dur, 0), 1);
+    const v = Math.round(end * (1 - Math.pow(1 - k, 3)));
+    el.textContent = (plain ? v : v.toLocaleString("es")) + suffix;
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+});
+
+// Brillo que sigue al ratón en las tarjetas
+document.querySelectorAll(".card").forEach(card => {
+  card.addEventListener("pointermove", e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    card.style.setProperty("--my", `${e.clientY - r.top}px`);
+  });
+});
+
+// ---------- Vitral 3D ----------
+if (container) initVitral();
+
+function initVitral() {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x050508);
-
-  const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const camera = new THREE.PerspectiveCamera(25, innerWidth / innerHeight, 0.1, 1000);
   camera.position.set(0, 0, 20);
 
-  const renderer = new THREE.WebGLRenderer({ antialias:true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setClearColor(0x000000, 0);
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   container.appendChild(renderer.domElement);
 
-  // LUCES
   scene.add(new THREE.AmbientLight(0xffffff, 1));
-  const backLight = new THREE.DirectionalLight(0xfff4e6, 3);
-  backLight.position.set(0, 0, -10);
-  scene.add(backLight);
+  const back = new THREE.DirectionalLight(0xfff4e6, 3);
+  back.position.set(0, 0, -10);
+  scene.add(back);
 
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
-  controls.minDistance = 8;
-  controls.maxDistance = 25;
-  controls.enablePan = true;
-  controls.target.set(0, 0, 0);
+  const pivot = new THREE.Group();
+  scene.add(pivot);
 
-  const loader = new GLTFLoader();
   let vitral = null;
-
-  // VITRAL
-  loader.load("assets/models/vitral1.glb", (gltf) => {
+  new GLTFLoader().load("assets/models/vitral1.glb", gltf => {
     vitral = gltf.scene;
-    vitral.scale.set(8, 8, 8);
-    vitral.position.set(0, 0, 3); // CENTRADO Y ADELANTE
-    scene.add(vitral);
+    vitral.scale.setScalar(8);
+    pivot.add(vitral);
+    pivot.position.z = 3;
+  }, undefined, err => console.warn("No se pudo cargar vitral1.glb", err));
+
+  // Chispas doradas flotando
+  const N = 260;
+  const pos = new Float32Array(N * 3), speed = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    pos[i * 3] = (Math.random() - 0.5) * 16;
+    pos[i * 3 + 1] = (Math.random() - 0.5) * 10;
+    pos[i * 3 + 2] = Math.random() * 6 - 2;
+    speed[i] = 0.1 + Math.random() * 0.35;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const sparks = new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0xffd36b, size: 0.07, transparent: true, opacity: 0.8,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  scene.add(sparks);
+
+  // Ratón y scroll
+  const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+  addEventListener("pointermove", e => {
+    mouse.x = (e.clientX / innerWidth - 0.5) * 2;
+    mouse.y = (e.clientY / innerHeight - 0.5) * 2;
   });
 
-  // SISTEMA DE CHISPITAS
-  const particles = new THREE.Points(
-    new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(300 * 3), 3)),
-    new THREE.PointsMaterial({ color: 0xffd700, size: 0.1, transparent: true, opacity: 0.8 })
-  );
-  scene.add(particles);
-  const particlePos = particles.geometry.attributes.position.array;
+  let scroll = 0, targetScroll = 0;
+  const onScroll = () => {
+    targetScroll = scrollY;
+    const max = document.documentElement.scrollHeight - innerHeight;
+    if (bar) bar.style.width = (max > 0 ? scrollY / max * 100 : 0) + "%";
+  };
+  addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
 
-  // CALCULAR INICIO
-  function calcularInicio(){
-    const startSection = document.querySelector('.hero-content');
-    if(startSection){ startY = startSection.offsetTop; }
-  }
-  calcularInicio();
-  window.addEventListener('resize', calcularInicio);
-
-  window.addEventListener('scroll', () => { targetScroll = window.scrollY; });
-  window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+  addEventListener("resize", () => {
+    camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(innerWidth, innerHeight);
   });
-
-  // ANIMAR BURBUJAS DE TEXTO
-  function animarBurbujas(progress){
-    document.querySelectorAll('.info-burbuja').forEach((burbuja, i) => {
-      const trigger = i * 0.3;
-      if(progress > trigger){
-        burbuja.classList.add('visible');
-        // CHISPITAS CERCA DE LA BURBUJA
-        for(let j=0; j<10; j++){
-          const idx = (i*10 + j) * 3;
-          particlePos[idx] = burbuja.offsetLeft / window.innerWidth * 20 - 10;
-          particlePos[idx+1] = -progress * 5 + Math.random();
-          particlePos[idx+2] = Math.random() * 2;
-        }
-      }
-    });
-    particles.geometry.attributes.position.needsUpdate = true;
-  }
 
   const clock = new THREE.Clock();
-  function tick(){
-    requestAnimationFrame(tick);
-    const dt = clock.getDelta();
-    scrollY += (targetScroll - scrollY) * 0.1;
-    
-    if(vitral){
-      const progress = (scrollY - startY) / window.innerHeight;
-      const clampedProgress = Math.max(0, Math.min(progress, 1));
+  const ease = k => k * k * (3 - 2 * k);
 
-      // MOVIMIENTO CORTO: DE -3 A +3. NO SE PIERDE
-      vitral.position.x = -3 + clampedProgress * 6;
-      vitral.position.y = 0 - clampedProgress * 4; // BAJA DESPACIO
-      vitral.position.z = 3;
-      vitral.rotation.y += dt * 0.2;
+  renderer.setAnimationLoop(() => {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const t = clock.elapsedTime;
 
-      animarBurbujas(progress);
+    scroll += (targetScroll - scroll) * 0.08;
+    mouse.sx += (mouse.x - mouse.sx) * 0.05;
+    mouse.sy += (mouse.y - mouse.sy) * 0.05;
+
+    const p = Math.min(scroll / innerHeight, 1.2);
+    const wide = innerWidth > 840;
+    const baseX = wide ? 3.6 : 0;
+    const baseY = wide ? 0 : 2.2;
+
+    // Del lado derecho del hero hacia la izquierda mientras se baja
+    pivot.position.x = THREE.MathUtils.lerp(baseX, wide ? -4.2 : 0, ease(Math.min(p, 1)));
+    pivot.position.y = baseY - p * 2 + Math.sin(t * 0.8) * 0.15;
+    pivot.scale.setScalar(wide ? 1 : 0.6);
+
+    if (vitral) vitral.rotation.y += dt * 0.35;
+    pivot.rotation.x = mouse.sy * 0.18;
+    pivot.rotation.z = -mouse.sx * 0.08;
+    pivot.position.x += mouse.sx * 0.25;
+
+    sparks.rotation.y = t * 0.03 + mouse.sx * 0.1;
+    const arr = geo.attributes.position.array;
+    for (let i = 0; i < N; i++) {
+      arr[i * 3 + 1] += speed[i] * dt;
+      if (arr[i * 3 + 1] > 5) arr[i * 3 + 1] = -5;
     }
+    geo.attributes.position.needsUpdate = true;
 
-    controls.update();
+    // El vitral se atenúa al bajar para no estorbar la lectura
+    container.style.opacity = String(Math.max(0.25, 1 - p * 0.75));
+
     renderer.render(scene, camera);
-  }
-  tick();
+  });
 }

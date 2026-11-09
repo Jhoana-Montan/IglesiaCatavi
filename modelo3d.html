@@ -24,6 +24,7 @@
 
     <!-- Estilos de la página -->
     <link rel="stylesheet" href="css/modelo3d.css">
+    <link rel="stylesheet" href="css/sol.css">
 
     <!-- Importación de Three.js -->
     <script
@@ -57,6 +58,14 @@
 
         <button
             type="button"
+            id="btnInicio"
+            title="Volver a la página principal"
+        >
+            <span>← Inicio</span>
+        </button>
+
+        <button
+            type="button"
             id="btnReset"
             title="Regresar a la vista exterior de la iglesia"
         >
@@ -71,13 +80,29 @@
             <span>Giro automático</span>
         </button>
 
-        <button
-            type="button"
-            id="btnLight"
-            title="Cambiar la iluminación de la escena"
-        >
-            <span>Día / Noche</span>
-        </button>
+        <!-- CONTROL DEL SOL: Día / Atardecer / Noche -->
+        <div id="btnLight" class="sun-control" title="Cambiar el momento del día">
+            <div id="sunLabel" class="sun-label">☀️ Día</div>
+            <div class="sun-rail">
+                <div
+                    id="sunTrack"
+                    class="sun-track"
+                    role="slider"
+                    tabindex="0"
+                    aria-label="Momento del día"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="0"
+                >
+                    <div id="sunThumb" class="sun-thumb">☀️</div>
+                </div>
+                <div class="sun-stops">
+                    <button type="button" data-sun="0" title="Día">☀️</button>
+                    <button type="button" data-sun="0.5" title="Atardecer">🌇</button>
+                    <button type="button" data-sun="1" title="Noche">🌙</button>
+                </div>
+            </div>
+        </div>
 
         <button
             type="button"

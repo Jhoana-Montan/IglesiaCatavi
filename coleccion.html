@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Colección 3D · Iglesia de Catavi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/coleccion.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="escena"></div>
+<div id="flash"></div>
+
+<nav class="superior-izq">
+  <a class="pildora" href="index.html">← Inicio</a>
+  <a class="pildora" href="modelo3d.html">Modelo 3D</a>
+</nav>
+
+<div class="herramientas">
+  <button id="btn-giro" class="activo" title="Giro automático">⟳</button>
+  <button id="btn-centrar" title="Centrar vista">◎</button>
+  <button id="btn-foto" title="Tomar foto">📷</button>
+  <button id="btn-pantalla" title="Pantalla completa">⛶</button>
+  <button id="btn-info" class="activo" title="Mostrar / ocultar información">i</button>
+</div>
+
+<button id="anterior" class="flecha izq" aria-label="Anterior">‹</button>
+<button id="siguiente" class="flecha der" aria-label="Siguiente">›</button>
+
+<aside id="panel">
+  <div id="panel-contenido">
+    <span id="contador"></span>
+    <span class="etiqueta" id="etiqueta"></span>
+    <h1 id="titulo"></h1>
+    <div class="pestanas">
+      <button data-p="sobre" class="activa">Sobre la pieza</button>
+      <button data-p="curioso">Dato curioso</button>
+    </div>
+    <div id="texto"></div>
+    <p id="resumen" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--borde);font-size:13.5px;line-height:1.55;color:#aeb8cf"></p>
+    <a class="boton" href="modelo3d.html">Explorar modelo 3D →</a>
+  </div>
+</aside>
+
+<p id="ayuda">Arrastra para girar · Clic derecho o dos dedos para mover · Rueda para acercar un poco</p>
+<div id="cargando"><div class="anillo"></div><span id="pct">Cargando…</span></div>
+<footer class="inferior"><div id="tira"></div></footer>
+
+<script type="module" src="js/coleccion.js"></script>
+</body>
+</html>
